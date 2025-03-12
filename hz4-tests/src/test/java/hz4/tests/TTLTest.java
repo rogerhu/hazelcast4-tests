@@ -2,6 +2,7 @@ package hz4.tests;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hazelcast.map.ExtendedMapEntry;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Map.Entry;
@@ -85,7 +86,11 @@ public class TTLTest {
 
         @Override
         public String process(Entry<String, String> entry) {
-            return entry.setValue(newValue);
+
+            ExtendedMapEntry extendedMapEntry = (ExtendedMapEntry) entry;
+
+            return (String) extendedMapEntry.setValue(newValue, 10, TimeUnit.SECONDS);
+
         }
 
     }
