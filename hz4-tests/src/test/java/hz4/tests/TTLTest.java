@@ -1,6 +1,7 @@
 package hz4.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.hazelcast.map.ExtendedMapEntry;
 import java.net.InetSocketAddress;
@@ -53,7 +54,7 @@ public class TTLTest {
     }
 
     @Test
-    public void testTTL_Different_With_HZ4() {
+    public void testTTL_Different_With_HZ4() throws InterruptedException {
         assertEquals(3, hazelcastInstance1.getCluster().getMembers().size());
         
         getTestMap(hazelcastInstance1).set(KEY1, VALUE1);
@@ -65,7 +66,12 @@ public class TTLTest {
 
         hazelcastInstance3.<String,String>getMap(TEST_MAP_NAME).executeOnKey(KEY1, new ChangeValueEntryProcessor(VALUE2));
 
-        assertEquals("ttl was changed by entry processor", 10000, getTestMap(hazelcastInstance1).getEntryView(KEY1).getTtl());
+        assertEquals("ttl was changed by entry processor", 5000, getTestMap(hazelcastInstance1).getEntryView(KEY1).getTtl());
+
+        Thread.sleep(3*1000);
+        var value = getTestMap(hazelcastInstance1).getEntryView(KEY1);
+        System.out.println("expiration_time=" + value.getExpirationTime());
+        assertTrue(value != null);
     }
 
     public IMap<String,String> getTestMap(HazelcastInstance fromInstance) {
@@ -89,7 +95,7 @@ public class TTLTest {
 
             ExtendedMapEntry extendedMapEntry = (ExtendedMapEntry) entry;
 
-            return (String) extendedMapEntry.setValue(newValue, 10, TimeUnit.SECONDS);
+            return (String) extendedMapEntry.setValue(newValue, 5, TimeUnit.SECONDS);
 
         }
 
