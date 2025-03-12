@@ -3,7 +3,9 @@ package hz4.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hazelcast.core.EntryEvent;
 import com.hazelcast.map.ExtendedMapEntry;
+import com.hazelcast.map.listener.EntryExpiredListener;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Map.Entry;
@@ -68,8 +70,10 @@ public class TTLTest {
 
         assertEquals("ttl was changed by entry processor", 5000, getTestMap(hazelcastInstance1).getEntryView(KEY1).getTtl());
 
-        Thread.sleep(3*1000);
         var value = getTestMap(hazelcastInstance1).getEntryView(KEY1);
+        getTestMap(hazelcastInstance1).addEntryListener(new MyExpiredListener(), true);
+
+        Thread.sleep(10*1000);
         System.out.println("expiration_time=" + value.getExpirationTime());
         assertTrue(value != null);
     }
@@ -99,6 +103,14 @@ public class TTLTest {
 
         }
 
+    }
+
+    public class MyExpiredListener implements EntryExpiredListener<String, String> {
+        @Override
+        public void entryExpired(EntryEvent<String, String> event) {
+            // value is removed because it was expired
+            System.out.println("Entry expired: Key = " + event.getKey() + ", Value = " + event.getValue());
+        }
     }
 
     
